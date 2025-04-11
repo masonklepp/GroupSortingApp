@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MessageSquare, UserPlus, User } from "lucide-react"
+import { MessageSquare, UserPlus, User, Info, Check, AlertCircle, Clock } from "lucide-react"
 import { ProgressRing } from "@/components/progress-ring"
 import {
   Dialog,
@@ -20,6 +20,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
 
 interface MatchCardProps {
   match: {
@@ -30,10 +38,26 @@ interface MatchCardProps {
     role: string
     availability: string
     avatar: string
+    bio?: string
+    email?: string
+    matchFactors?: {
+      roleCompat?: number
+      skillsCompat?: number
+      availabilityCompat?: number
+      workingStyleCompat?: number
+    }
+    workingStyle?: {
+      communication?: string
+      workHours?: string
+      teamSize?: string
+      learningStyle?: string
+    }
   }
+  onInvite?: (match: any) => void
+  hasTeams?: boolean
 }
 
-export function MatchCard({ match }: MatchCardProps) {
+export function MatchCard({ match, onInvite, hasTeams = true }: MatchCardProps) {
   // First, add a new state for the profile dialog
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [messageDialogOpen, setMessageDialogOpen] = useState(false)
@@ -45,8 +69,28 @@ export function MatchCard({ match }: MatchCardProps) {
     if (score >= 90) return "text-emerald-500"
     if (score >= 80) return "text-primary"
     if (score >= 70) return "text-accent"
-    return "text-amber-500"
+    if (score >= 50) return "text-amber-500"
+    return "text-rose-500"
   }
+
+  // Format score as percentage with color
+  const formatScore = (score: number | undefined) => {
+    if (score === undefined) return <span className="text-muted-foreground">N/A</span>
+    return (
+      <span className={getCompatibilityColor(score)}>
+        {score}%
+      </span>
+    )
+  }
+
+  // Handle invite button click
+  const handleInvite = () => {
+    if (onInvite) {
+      onInvite(match);
+    } else {
+      setInviteDialogOpen(true);
+    }
+  };
 
   return (
     <Card
@@ -116,7 +160,13 @@ export function MatchCard({ match }: MatchCardProps) {
           </div>
 
           <div className="flex flex-row justify-end gap-2 border-t bg-muted/30 p-4 backdrop-blur-sm sm:flex-col sm:border-l sm:border-t-0">
-            <Button variant="default" size="sm" className="flex-1 gap-2" onClick={() => setInviteDialogOpen(true)}>
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="flex-1 gap-2" 
+              onClick={handleInvite}
+              disabled={!hasTeams}
+            >
               <UserPlus className="h-4 w-4" />
               Invite
             </Button>
@@ -132,54 +182,57 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
       </CardContent>
 
-      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Invite to Team</DialogTitle>
-            <DialogDescription>Send an invitation to {match.name} to join your team.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={match.avatar} alt={match.name} />
-                <AvatarFallback>{match.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium text-foreground">{match.name}</p>
-                <p className="text-sm text-muted-foreground">Compatibility: {match.compatibility}%</p>
+      {/* Only render the dialog if no external handler */}
+      {!onInvite && (
+        <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Invite to Team</DialogTitle>
+              <DialogDescription>Send an invitation to {match.name} to join your team.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={match.avatar} alt={match.name} />
+                  <AvatarFallback>{match.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-foreground">{match.name}</p>
+                  <p className="text-sm text-muted-foreground">Compatibility: {match.compatibility}%</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="team" className="text-foreground">Select Team</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="project-alpha">Project Alpha</SelectItem>
+                    <SelectItem value="research-group">Research Group B</SelectItem>
+                    <SelectItem value="new">Create New Team</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="message" className="text-foreground">Message (Optional)</Label>
+                <Textarea
+                  id="message"
+                  placeholder={`Hi ${match.name}, I'd like to invite you to join my team...`}
+                  className="min-h-[100px]"
+                />
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="team" className="text-foreground">Select Team</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a team" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="project-alpha">Project Alpha</SelectItem>
-                  <SelectItem value="research-group">Research Group B</SelectItem>
-                  <SelectItem value="new">Create New Team</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message" className="text-foreground">Message (Optional)</Label>
-              <Textarea
-                id="message"
-                placeholder={`Hi ${match.name}, I'd like to invite you to join my team...`}
-                className="min-h-[100px]"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setInviteDialogOpen(false)}>Send Invitation</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setInviteDialogOpen(false)}>Send Invitation</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -230,80 +283,168 @@ export function MatchCard({ match }: MatchCardProps) {
       </Dialog>
 
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground">User Profile</DialogTitle>
             <DialogDescription>View {match.name}'s complete profile information</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            <div className="flex flex-col items-center gap-4 sm:flex-row">
-              <Avatar className="h-20 w-20">
+            {/* User Header with Avatar and Basic Info */}
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <Avatar className="h-24 w-24 border-2 border-primary/20">
                 <AvatarImage src={match.avatar} alt={match.name} />
-                <AvatarFallback>{match.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-xl">{match.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div>
-                <h3 className="text-xl font-semibold text-foreground">{match.name}</h3>
-                <p className="text-sm text-muted-foreground">Preferred Role: {match.role}</p>
-                <div className="mt-2 flex items-center">
-                  <span className="text-sm font-medium mr-2 text-foreground">Compatibility:</span>
-                  <Badge variant="outline" className={`${getCompatibilityColor(match.compatibility)}`}>
-                    {match.compatibility}%
+              
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-foreground">{match.name}</h3>
+                <p className="text-muted-foreground">{match.email || 'Email not available'}</p>
+                
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant="outline" className="bg-primary/10 text-primary">
+                    {match.role}
                   </Badge>
+                  <Badge variant="outline" className={getCompatibilityColor(match.compatibility)}>
+                    {match.compatibility}% Compatible
+                  </Badge>
+                </div>
+                
+                <p className="mt-4 text-sm text-muted-foreground">
+                  {match.bio || 'No bio information available for this user.'}
+                </p>
+              </div>
+            </div>
+            
+            {/* Compatibility Details */}
+            <div className="rounded-lg border bg-card p-4">
+              <h4 className="mb-4 text-sm font-semibold tracking-tight flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Compatibility Breakdown
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="flex flex-col items-center p-3 rounded-md bg-muted/50">
+                  <h5 className="text-xs font-medium mb-2 text-muted-foreground">Role Match</h5>
+                  <div className="text-xl font-bold mb-1">
+                    {formatScore(match.matchFactors?.roleCompat)}
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    How well your roles complement each other
+                  </p>
+                </div>
+                
+                <div className="flex flex-col items-center p-3 rounded-md bg-muted/50">
+                  <h5 className="text-xs font-medium mb-2 text-muted-foreground">Skills Match</h5>
+                  <div className="text-xl font-bold mb-1">
+                    {formatScore(match.matchFactors?.skillsCompat)}
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Balance of shared and complementary skills
+                  </p>
+                </div>
+                
+                <div className="flex flex-col items-center p-3 rounded-md bg-muted/50">
+                  <h5 className="text-xs font-medium mb-2 text-muted-foreground">Availability</h5>
+                  <div className="text-xl font-bold mb-1">
+                    {formatScore(match.matchFactors?.availabilityCompat)}
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Schedule compatibility
+                  </p>
+                </div>
+                
+                <div className="flex flex-col items-center p-3 rounded-md bg-muted/50">
+                  <h5 className="text-xs font-medium mb-2 text-muted-foreground">Working Style</h5>
+                  <div className="text-xl font-bold mb-1">
+                    {formatScore(match.matchFactors?.workingStyleCompat)}
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Alignment of preferences
+                  </p>
                 </div>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground">About</h4>
-              <p className="text-sm text-muted-foreground">
-                Computer Science student with a passion for web development and UI/UX design. Looking for teammates who
-                are committed to quality and meeting deadlines.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground">Skills</h4>
+            
+            {/* Skills */}
+            <div>
+              <h4 className="text-sm font-semibold mb-2 tracking-tight flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                Skills
+              </h4>
               <div className="flex flex-wrap gap-2">
-                {match.skills.map((skill) => (
-                  <Badge key={skill} variant="secondary">
-                    {skill}
-                  </Badge>
-                ))}
+                {match.skills && match.skills.length > 0 ? (
+                  match.skills.map((skill) => (
+                    <Badge key={skill} variant="secondary">
+                      {skill}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No skills listed</p>
+                )}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground">Availability</h4>
-              <p className="text-sm text-muted-foreground">{match.availability}</p>
+            
+            {/* Availability */}
+            <div>
+              <h4 className="text-sm font-semibold mb-2 tracking-tight flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Availability
+              </h4>
+              <p className="text-sm text-foreground">{match.availability || 'Not specified'}</p>
             </div>
-
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground">Working Style</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-medium text-foreground">Communication</p>
-                  <p className="text-muted-foreground">Prefers video calls and chat</p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Work Hours</p>
-                  <p className="text-muted-foreground">Evenings and weekends</p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Team Size</p>
-                  <p className="text-muted-foreground">3-5 people</p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Learning Style</p>
-                  <p className="text-muted-foreground">Visual</p>
-                </div>
+            
+            {/* Working Style */}
+            <div>
+              <h4 className="text-sm font-semibold mb-2 tracking-tight flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                Working Style Preferences
+              </h4>
+              
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">Preference</TableHead>
+                      <TableHead>Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">Communication</TableCell>
+                      <TableCell>{match.workingStyle?.communication || 'Not specified'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Work Hours</TableCell>
+                      <TableCell>{match.workingStyle?.workHours || 'Not specified'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Team Size</TableCell>
+                      <TableCell>{match.workingStyle?.teamSize || 'Not specified'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Learning Style</TableCell>
+                      <TableCell>{match.workingStyle?.learningStyle || 'Not specified'}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
               Close
             </Button>
             <Button
+              onClick={() => {
+                setProfileDialogOpen(false)
+                handleInvite();
+              }}
+              disabled={!hasTeams}
+            >
+              Invite to Team
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => {
                 setProfileDialogOpen(false)
                 setMessageDialogOpen(true)

@@ -506,7 +506,15 @@ export default function TeamMatchingPage() {
             skills: match.user.skills || [],
             availability: match.user.availability,
             avatar: match.user.image || '/placeholder.svg?height=40&width=40',
+            email: match.user.email,
+            bio: match.user.bio || 'No bio information available',
             matchFactors: match.matchFactors,
+            workingStyle: match.user.workingStyle || {
+              communication: 'Not specified',
+              workHours: 'Not specified',
+              teamSize: 'Not specified',
+              learningStyle: 'Not specified'
+            }
           }))
           
           setMatchData(formattedData)
@@ -698,93 +706,15 @@ export default function TeamMatchingPage() {
                   </Card>
                 )}
                 {filteredMatches.map((match) => (
-                  <Card key={match.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="flex flex-col sm:flex-row">
-                        <div className="flex-1 p-6">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16">
-                              <AvatarImage src={match.avatar} alt={match.name} />
-                              <AvatarFallback>{match.name.split(" ").map((n: string) => n[0]).join("")}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <h3 className="font-semibold text-lg">{match.name}</h3>
-                              <p className="text-muted-foreground">Preferred Role: {match.role}</p>
-                            </div>
-                            <div className="ml-auto">
-                              <div className="relative h-14 w-14 flex items-center justify-center rounded-full">
-                                <div
-                                  className="absolute inset-0 rounded-full border-4"
-                                  style={{
-                                    borderColor: `hsl(${match.compatibility}, 70%, 50%)`,
-                                    borderLeftColor: "transparent",
-                                    transform: "rotate(-45deg)",
-                                  }}
-                                />
-                                <span className="text-lg font-bold">{match.compatibility}%</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="mt-4">
-                            <p className="mb-2 text-sm font-medium">Skills:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {match.skills.map((skill: string, i: number) => (
-                                <Badge key={i} variant="secondary">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="mt-4">
-                            <p className="mb-2 text-sm font-medium">Availability:</p>
-                            <p className="text-sm text-muted-foreground">{match.availability}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-row justify-end gap-2 border-t bg-muted/50 p-4 sm:flex-col sm:border-l sm:border-t-0">
-                          {teams.length > 0 ? (
-                            <Button
-                              variant="default"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => {
-                                setSelectedMatch(match);
-                                setInviteDialog(true);
-                              }}
-                            >
-                              <UserPlus className="mr-2 h-4 w-4" />
-                              Invite
-                            </Button>
-                          ) : (
-                            <Button 
-                              variant="default" 
-                              size="sm" 
-                              className="flex-1"
-                              onClick={() => {
-                                toast({
-                                  title: "Team required",
-                                  description: "You need to create or join a team before inviting others.",
-                                })
-                              }}
-                            >
-                              <UserPlus className="mr-2 h-4 w-4" />
-                              Invite
-                            </Button>
-                          )}
-                          <Button variant="outline" size="sm" className="flex-1">
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Message
-                          </Button>
-                          <Button variant="ghost" size="sm" className="flex-1">
-                            <Info className="mr-2 h-4 w-4" />
-                            Profile
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <MatchCard 
+                    key={match.id} 
+                    match={match}
+                    onInvite={(selectedMatch) => {
+                      setSelectedMatch(selectedMatch);
+                      setInviteDialog(true);
+                    }}
+                    hasTeams={teams.length > 0}
+                  />
                 ))}
               </>
             ) : (
