@@ -69,7 +69,7 @@ export function MatchCard({ match }: MatchCardProps) {
                   <AvatarFallback>{match.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-xl font-semibold">{match.name}</h3>
+                  <h3 className="text-xl font-semibold text-foreground">{match.name}</h3>
                   <p className="text-sm text-muted-foreground">Preferred Role: {match.role}</p>
                 </div>
                 <div className="ml-auto">
@@ -86,7 +86,7 @@ export function MatchCard({ match }: MatchCardProps) {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Compatibility Score</p>
+                        <p className="text-foreground">Compatibility Score</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -94,7 +94,7 @@ export function MatchCard({ match }: MatchCardProps) {
               </div>
 
               <div className="mt-6">
-                <span className="text-sm font-medium">Skills:</span>
+                <span className="text-sm font-medium text-foreground">Skills:</span>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {match.skills.map((skill) => (
                     <Badge
@@ -109,7 +109,7 @@ export function MatchCard({ match }: MatchCardProps) {
               </div>
 
               <div className="mt-4">
-                <span className="text-sm font-medium">Availability:</span>
+                <span className="text-sm font-medium text-foreground">Availability:</span>
                 <p className="text-sm text-muted-foreground">{match.availability}</p>
               </div>
             </div>
@@ -135,7 +135,7 @@ export function MatchCard({ match }: MatchCardProps) {
       <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Invite to Team</DialogTitle>
+            <DialogTitle className="text-foreground">Invite to Team</DialogTitle>
             <DialogDescription>Send an invitation to {match.name} to join your team.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -145,13 +145,13 @@ export function MatchCard({ match }: MatchCardProps) {
                 <AvatarFallback>{match.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">{match.name}</p>
+                <p className="font-medium text-foreground">{match.name}</p>
                 <p className="text-sm text-muted-foreground">Compatibility: {match.compatibility}%</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="team">Select Team</Label>
+              <Label htmlFor="team" className="text-foreground">Select Team</Label>
               <Select>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a team" />
@@ -164,7 +164,7 @@ export function MatchCard({ match }: MatchCardProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="message">Message (Optional)</Label>
+              <Label htmlFor="message" className="text-foreground">Message (Optional)</Label>
               <Textarea
                 id="message"
                 placeholder={`Hi ${match.name}, I'd like to invite you to join my team...`}
@@ -184,7 +184,7 @@ export function MatchCard({ match }: MatchCardProps) {
       <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send Message</DialogTitle>
+            <DialogTitle className="text-foreground">Send Message</DialogTitle>
             <DialogDescription>Send a message to {match.name} to discuss collaboration.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -194,17 +194,17 @@ export function MatchCard({ match }: MatchCardProps) {
                 <AvatarFallback>{match.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">{match.name}</p>
+                <p className="font-medium text-foreground">{match.name}</p>
                 <p className="text-sm text-muted-foreground">Compatibility: {match.compatibility}%</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
+              <Label htmlFor="subject" className="text-foreground">Subject</Label>
               <Input id="subject" placeholder="Enter message subject" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="message-content">Message</Label>
+              <Label htmlFor="message-content" className="text-foreground">Message</Label>
               <Textarea
                 id="message-content"
                 placeholder={`Hi ${match.name}, I'd like to discuss a potential collaboration...`}
@@ -232,7 +232,7 @@ export function MatchCard({ match }: MatchCardProps) {
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>User Profile</DialogTitle>
+            <DialogTitle className="text-foreground">User Profile</DialogTitle>
             <DialogDescription>View {match.name}'s complete profile information</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
@@ -242,10 +242,10 @@ export function MatchCard({ match }: MatchCardProps) {
                 <AvatarFallback>{match.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-xl font-semibold">{match.name}</h3>
+                <h3 className="text-xl font-semibold text-foreground">{match.name}</h3>
                 <p className="text-sm text-muted-foreground">Preferred Role: {match.role}</p>
                 <div className="mt-2 flex items-center">
-                  <span className="text-sm font-medium mr-2">Compatibility:</span>
+                  <span className="text-sm font-medium mr-2 text-foreground">Compatibility:</span>
                   <Badge variant="outline" className={`${getCompatibilityColor(match.compatibility)}`}>
                     {match.compatibility}%
                   </Badge>
@@ -254,7 +254,7 @@ export function MatchCard({ match }: MatchCardProps) {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold">About</h4>
+              <h4 className="text-sm font-semibold text-foreground">About</h4>
               <p className="text-sm text-muted-foreground">
                 Computer Science student with a passion for web development and UI/UX design. Looking for teammates who
                 are committed to quality and meeting deadlines.
@@ -262,7 +262,7 @@ export function MatchCard({ match }: MatchCardProps) {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold">Skills</h4>
+              <h4 className="text-sm font-semibold text-foreground">Skills</h4>
               <div className="flex flex-wrap gap-2">
                 {match.skills.map((skill) => (
                   <Badge key={skill} variant="secondary">
@@ -273,27 +273,27 @@ export function MatchCard({ match }: MatchCardProps) {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold">Availability</h4>
+              <h4 className="text-sm font-semibold text-foreground">Availability</h4>
               <p className="text-sm text-muted-foreground">{match.availability}</p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold">Working Style</h4>
+              <h4 className="text-sm font-semibold text-foreground">Working Style</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="font-medium">Communication</p>
+                  <p className="font-medium text-foreground">Communication</p>
                   <p className="text-muted-foreground">Prefers video calls and chat</p>
                 </div>
                 <div>
-                  <p className="font-medium">Work Hours</p>
+                  <p className="font-medium text-foreground">Work Hours</p>
                   <p className="text-muted-foreground">Evenings and weekends</p>
                 </div>
                 <div>
-                  <p className="font-medium">Team Size</p>
+                  <p className="font-medium text-foreground">Team Size</p>
                   <p className="text-muted-foreground">3-5 people</p>
                 </div>
                 <div>
-                  <p className="font-medium">Learning Style</p>
+                  <p className="font-medium text-foreground">Learning Style</p>
                   <p className="text-muted-foreground">Visual</p>
                 </div>
               </div>

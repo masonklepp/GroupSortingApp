@@ -67,7 +67,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <FeatureCard
               icon={UserCircle}
               title="Create Your Profile"
@@ -87,22 +87,13 @@ export default function Home() {
               style={{ animationDelay: "100ms" }}
             />
             <FeatureCard
-              icon={MessageSquare}
-              title="Connect & Invite"
-              description="Send invitations and communicate with potential teammates seamlessly."
-              href="/invitations"
-              buttonText="Manage Invitations"
-              className="animate-slide-up"
-              style={{ animationDelay: "200ms" }}
-            />
-            <FeatureCard
               icon={LayoutDashboard}
               title="Manage Teams"
-              description="For instructors: Oversee team formation and track progress with detailed analytics."
-              href="/admin"
-              buttonText="Admin Dashboard"
+              description="Create teams, invite members, and track progress with detailed team analytics."
+              href="/team-matching?tab=teams"
+              buttonText="View Teams"
               className="animate-slide-up"
-              style={{ animationDelay: "300ms" }}
+              style={{ animationDelay: "200ms" }}
             />
           </div>
         </div>
