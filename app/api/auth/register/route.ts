@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { calculateCompatibilityScore } from '@/lib/utils/matchUtils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,6 +44,23 @@ export async function POST(req: NextRequest) {
         learningStyle: 'Any',
       },
     });
+
+    // Generate matches with existing users
+    try {
+      // Find all other users
+      const otherUsers = await User.find({ _id: { $ne: user._id } });
+      
+      // Calculate compatibility with each user
+      const compatibilityPromises = otherUsers.map(otherUser => 
+        calculateCompatibilityScore(user, otherUser)
+      );
+      
+      // Wait for all compatibility calculations to complete
+      await Promise.all(compatibilityPromises);
+    } catch (matchError) {
+      console.error('Error generating initial matches:', matchError);
+      // Continue with registration even if match generation fails
+    }
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = user.toObject();

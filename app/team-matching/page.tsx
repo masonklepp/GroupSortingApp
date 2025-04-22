@@ -33,6 +33,7 @@ export default function TeamMatchingPage() {
   const [matchData, setMatchData] = useState<any[]>([])
   const [filteredMatches, setFilteredMatches] = useState<any[]>([])
   const [viewTeamDialog, setViewTeamDialog] = useState(false)
+  const [generatingMatches, setGeneratingMatches] = useState(false)
   
   // Add a proper type definition for team members
   interface TeamMember {
@@ -76,6 +77,45 @@ export default function TeamMatchingPage() {
   const [inviteMessage, setInviteMessage] = useState('');
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [selectedTeamForInvite, setSelectedTeamForInvite] = useState<string>('');
+
+  // Extract fetchMatches function to component scope
+  const fetchMatches = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/matches')
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Format the data for display
+        const formattedData = data.map((match: any) => ({
+          id: match.user.id,
+          name: match.user.name,
+          compatibility: match.compatibilityScore,
+          role: match.user.role,
+          skills: match.user.skills || [],
+          availability: match.user.availability,
+          avatar: match.user.image || '/placeholder.svg?height=40&width=40',
+          email: match.user.email,
+          bio: match.user.bio || 'No bio information available',
+          matchFactors: match.matchFactors,
+          workingStyle: match.user.workingStyle || {
+            communication: 'Not specified',
+            workHours: 'Not specified',
+            teamSize: 'Not specified',
+            learningStyle: 'Not specified'
+          }
+        }))
+        
+        setMatchData(formattedData)
+        setFilteredMatches(formattedData)
+      }
+    } catch (error) {
+      console.error('Error fetching matches:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Update team creation to save to the database
   const handleCreateTeam = async () => {
@@ -488,45 +528,7 @@ export default function TeamMatchingPage() {
   };
 
   useEffect(() => {
-    // Fetch real matches from the API
-    const fetchMatches = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/matches')
-        
-        if (response.ok) {
-          const data = await response.json()
-          
-          // Format the data for display
-          const formattedData = data.map((match: any) => ({
-            id: match.user.id,
-            name: match.user.name,
-            compatibility: match.compatibilityScore,
-            role: match.user.role,
-            skills: match.user.skills || [],
-            availability: match.user.availability,
-            avatar: match.user.image || '/placeholder.svg?height=40&width=40',
-            email: match.user.email,
-            bio: match.user.bio || 'No bio information available',
-            matchFactors: match.matchFactors,
-            workingStyle: match.user.workingStyle || {
-              communication: 'Not specified',
-              workHours: 'Not specified',
-              teamSize: 'Not specified',
-              learningStyle: 'Not specified'
-            }
-          }))
-          
-          setMatchData(formattedData)
-          setFilteredMatches(formattedData)
-        }
-      } catch (error) {
-        console.error('Error fetching matches:', error)
-      } finally {
-      setLoading(false)
-      }
-    }
-
+    // Fetch matches and user data on component mount
     fetchMatches()
     fetchUserData()
   }, [])
@@ -565,6 +567,42 @@ export default function TeamMatchingPage() {
     }
   };
 
+  // Add a function to generate matches
+  const generateMatches = async () => {
+    try {
+      setGeneratingMatches(true);
+      
+      const response = await fetch('/api/matches/generate', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Matches Generated",
+          description: `Successfully created ${result.matchesCreated} matches between ${result.totalUsers} users.`,
+        });
+        
+        // Refresh matches
+        await fetchMatches();
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.error || "Failed to generate matches.",
+        });
+      }
+    } catch (error) {
+      console.error("Error generating matches:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while generating matches.",
+      });
+    } finally {
+      setGeneratingMatches(false);
+    }
+  };
+
   return (
     <div className="container py-10">
       <div className="mx-auto max-w-5xl">
@@ -599,6 +637,17 @@ export default function TeamMatchingPage() {
                 <SelectItem value="name">Name (A-Z)</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              onClick={generateMatches} 
+              disabled={generatingMatches}
+              variant="outline"
+            >
+              {generatingMatches ? (
+                <>Generating...</>
+              ) : (
+                <>Generate Matches</>
+              )}
+            </Button>
           </div>
         </div>
 
@@ -724,9 +773,34 @@ export default function TeamMatchingPage() {
                     <Search className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <h3 className="mt-4 text-lg font-medium text-foreground">No matches found</h3>
-                  <p className="text-center text-muted-foreground">
-                    Try adjusting your search or filters to find more teammates.
+                  <p className="text-center text-muted-foreground mb-2">
+                    {session?.user ? 
+                      "It looks like you're new here! You need to generate matches to see compatible teammates." :
+                      "Try adjusting your search or filters to find more teammates."}
                   </p>
+                  <p className="text-center text-sm text-muted-foreground mb-4">
+                    {session?.user && "You can generate matches now or update your profile with more information for better match results."}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={generateMatches}
+                      disabled={generatingMatches}
+                    >
+                      {generatingMatches ? (
+                        <>Generating Matches...</>
+                      ) : (
+                        <>Generate Matches</>
+                      )}
+                    </Button>
+                    {session?.user && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => window.location.href = '/profile'}
+                      >
+                        Update Profile
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )}

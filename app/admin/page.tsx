@@ -12,10 +12,15 @@ import { useEffect, useState } from "react"
 export default function AdminDashboardPage() {
   const [users, setUsers] = useState<any[]>([])
   const [teams, setTeams] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [cleanupStatus, setCleanupStatus] = useState<{message: string, isError: boolean} | null>(null)
+  const [deleteUserStatus, setDeleteUserStatus] = useState<{message: string, isError: boolean} | null>(null)
   const [loading, setLoading] = useState({
     users: true,
     teams: true,
-    stats: true
+    stats: true,
+    cleanup: false,
+    deleteUser: false
   })
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -29,11 +34,16 @@ export default function AdminDashboardPage() {
       try {
         // Fetch users
         setLoading(prev => ({ ...prev, users: true }))
+        setError(null)
         const usersResponse = await fetch('/api/users')
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
           setUsers(usersData)
           setStats(prev => ({ ...prev, totalUsers: usersData.length }))
+        } else {
+          const errorData = await usersResponse.json()
+          setError(errorData.error || 'Failed to fetch users')
+          console.error('Error fetching users:', errorData)
         }
         setLoading(prev => ({ ...prev, users: false }))
 
@@ -75,6 +85,82 @@ export default function AdminDashboardPage() {
   const getInitials = (name: string) => {
     if (!name) return '?'
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
+  }
+
+  // Function to clean up orphaned matches
+  const cleanupOrphanedMatches = async () => {
+    try {
+      setLoading(prev => ({ ...prev, cleanup: true }))
+      setCleanupStatus(null)
+      
+      const response = await fetch('/api/admin/cleanup', {
+        method: 'POST',
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        setCleanupStatus({
+          message: `Cleanup successful! ${data.deletedMatches} orphaned matches removed.`,
+          isError: false
+        })
+      } else {
+        setCleanupStatus({
+          message: data.error || 'Failed to clean up matches',
+          isError: true
+        })
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error)
+      setCleanupStatus({
+        message: 'An error occurred during cleanup',
+        isError: true
+      })
+    } finally {
+      setLoading(prev => ({ ...prev, cleanup: false }))
+    }
+  }
+
+  // Function to delete a user
+  const deleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete user "${userName}"? This will also delete all associated matches.`)) {
+      return
+    }
+    
+    try {
+      setLoading(prev => ({ ...prev, deleteUser: true }))
+      setDeleteUserStatus(null)
+      
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        // Remove user from the users list
+        setUsers(users.filter(user => user._id !== userId))
+        setStats(prev => ({ ...prev, totalUsers: prev.totalUsers - 1 }))
+        
+        setDeleteUserStatus({
+          message: data.message || 'User deleted successfully',
+          isError: false
+        })
+      } else {
+        setDeleteUserStatus({
+          message: data.error || 'Failed to delete user',
+          isError: true
+        })
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      setDeleteUserStatus({
+        message: 'An error occurred while deleting the user',
+        isError: true
+      })
+    } finally {
+      setLoading(prev => ({ ...prev, deleteUser: false }))
+    }
   }
 
   return (
@@ -143,6 +229,40 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
+        {/* Add cleanup button */}
+        <div className="mt-6 flex justify-end">
+          <Button 
+            onClick={cleanupOrphanedMatches}
+            disabled={loading.cleanup}
+            variant="outline"
+          >
+            {loading.cleanup ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Cleaning up...
+              </>
+            ) : (
+              'Clean Up Orphaned Matches'
+            )}
+          </Button>
+        </div>
+        
+        {cleanupStatus && (
+          <div className={`mt-2 p-2 text-sm rounded-md ${
+            cleanupStatus.isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+          }`}>
+            {cleanupStatus.message}
+          </div>
+        )}
+        
+        {deleteUserStatus && (
+          <div className={`mt-2 p-2 text-sm rounded-md ${
+            deleteUserStatus.isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+          }`}>
+            {deleteUserStatus.message}
+          </div>
+        )}
+
         <Tabs defaultValue="users" className="mt-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="users">User Management</TabsTrigger>
@@ -160,6 +280,10 @@ export default function AdminDashboardPage() {
                 {loading.users ? (
                   <div className="flex items-center justify-center p-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : error ? (
+                  <div className="p-4 text-center text-sm text-red-500">
+                    {error}
                   </div>
                 ) : (
                   <div className="rounded-md border">
@@ -195,6 +319,19 @@ export default function AdminDashboardPage() {
                             <div className="text-right">
                               <Button variant="ghost" size="sm">
                                 Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-100"
+                                onClick={() => deleteUser(user._id, user.name)}
+                                disabled={loading.deleteUser}
+                              >
+                                {loading.deleteUser ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  'Delete'
+                                )}
                               </Button>
                             </div>
                           </div>

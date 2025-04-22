@@ -1,0 +1,64 @@
+"use client"
+
+import { useState } from "react"
+import { useSession } from "next-auth/react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+
+export default function CoursesPage() {
+  const { data: session, status } = useSession()
+  const [loading] = useState(false)
+  
+  if (status === "loading" || loading) {
+    return (
+      <div className="container py-10">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full"></div>
+          <p>Loading courses...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  if (status === "unauthenticated") {
+    return (
+      <div className="container py-10">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Authentication Required</AlertTitle>
+          <AlertDescription>
+            Please log in to view courses.
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4">
+          <Button asChild>
+            <Link href="/login">Login</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="container py-10">
+      <h1 className="text-3xl font-bold">Courses</h1>
+      <p className="mt-4">This is the courses page. This feature is under development.</p>
+      
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>API Integration In Progress</AlertTitle>
+        <AlertDescription>
+          We're working on connecting this page to our course database. Course listings will be available soon.
+        </AlertDescription>
+      </Alert>
+      
+      <div className="mt-4">
+        <Button asChild>
+          <Link href="/">Return to Home</Link>
+        </Button>
+      </div>
+    </div>
+  )
+} 

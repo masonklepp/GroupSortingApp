@@ -43,26 +43,33 @@ export async function GET(req: NextRequest) {
     .populate('user2', 'name email image role skills availability workingStyle');
     
     // Format the results to return the other user in each match
-    const formattedMatches = matches.map(match => {
-      const isUser1 = match.user1._id.toString() === currentUser._id.toString();
-      const otherUser = isUser1 ? match.user2 : match.user1;
-      
-      return {
-        matchId: match._id,
-        compatibilityScore: match.compatibilityScore,
-        matchFactors: match.matchFactors,
-        user: {
-          id: otherUser._id,
-          name: otherUser.name,
-          email: otherUser.email,
-          image: otherUser.image,
-          role: otherUser.role,
-          skills: otherUser.skills,
-          availability: otherUser.availability,
-          workingStyle: otherUser.workingStyle
-        }
-      };
-    });
+    const formattedMatches = matches
+      .filter(match => {
+        // Filter out matches where either user is null or undefined (deleted user)
+        return match.user1 && match.user2 && 
+               typeof match.user1 !== 'string' && 
+               typeof match.user2 !== 'string';
+      })
+      .map(match => {
+        const isUser1 = match.user1._id.toString() === currentUser._id.toString();
+        const otherUser = isUser1 ? match.user2 : match.user1;
+        
+        return {
+          matchId: match._id,
+          compatibilityScore: match.compatibilityScore,
+          matchFactors: match.matchFactors,
+          user: {
+            id: otherUser._id,
+            name: otherUser.name,
+            email: otherUser.email,
+            image: otherUser.image,
+            role: otherUser.role,
+            skills: otherUser.skills,
+            availability: otherUser.availability,
+            workingStyle: otherUser.workingStyle
+          }
+        };
+      });
     
     return NextResponse.json(formattedMatches);
   } catch (error) {
